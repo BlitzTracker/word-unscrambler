@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta Charset = 'utf-8'>
+        <title>
+            Word Unscrabler
+        </title> 
+    </head>
+    <style>
+        body {
+            background: #ffffff;
+            text-align: center;
+            padding: 5px;
+        }
+        b {
+            font-size: 2pc;
+            font-family: 'Courier New', Courier, monospace;
+            border: none;
+        }
+        div {
+            font-size: 1pc;
+            font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+        p {
+            border: solid;
+            padding: 20px;
+            width: 50%;
+            margin-left: 25%;
+        }
+        input {
+            background-color:#ed96968c;
+            border-radius: 10px;
+            padding: 5px;
+            font-size: 1pc;
+            transition: 0.5s;
+        }
+        input:hover {
+            background-color:#ffffff;
+            transition: 0.5s;
+        }
+        select {
+            background-color:#ed96968c;
+            border-radius: 10px;
+            padding: 5px;
+            font-size: 1pc;
+            margin-top: 20px;
+            transition: 0.5s;
+        }
+        select:hover {
+            background-color:#ffffff;
+            transition: 0.5s;
+        }
+        button {
+            border-radius: 5px;
+            padding: 5px;
+            background-color:#b3b3b3;
+            font-size: 1pc;
+            margin: 10px
+        }
+        form {
+            width: 50%;
+            margin-left: 25%;
+        }
+        .formOption {
+            margin: 10px;
+        }
+        .word {
+            background-color:#dfdfdf80;
+            padding: 10px;
+            margin: 10px;
+        }
+    </style>
+    <body>
+        
+        <div class = "page">
+            <form>
+                <input placeholder="Search" type="search" id="word" spellcheck=false list= "search">
+                <input placeholder="Must contain" type="text" maxlength="1" id="must" spellcheck=false>
+                <datalist id="search">
+                </datalist>
+                <button id="searchButton" type="submit">Search</button>
+                <button id="changeButton">Search Settings</button>
+            </form>
+            <div id="result"></div>
+        </div>
+
+        <div class = "page">
+            <form>
+                <div class="formOption">
+                    <select id="dictionary">
+                        <option value = 1>Dictionary one</option>
+                        <option value = 2>Dictionary two</option>
+                    </select>
+                </div>
+                <div class="formOption">
+                    <select id="unscrambleWord">
+                        <option value = 1>Unscrambler</option>
+                        <option value = 2>Dictionary</option>
+                    </select>
+                </div>
+                <div class="formOption">
+                    Match exact letter count
+                    <input type="checkbox" id="unscrambleType">
+                </div>
+                <div class="formOption">
+                    Show definition
+                    <input type="checkbox" id="showDef" checked>
+                </div>
+                <div class="formOption">
+                    <button id="applyButton" type="submit">Apply</button>
+                </div>
+            </form>
+        </div>
+
+        <script src="data.js"></script>
+        <script src="data2.js"></script>
+        <script type="module">
+
+        const words1 = Object.keys(dic1),
+            words2 = Object.keys(dic2),
+            dictionary = document.getElementById("dictionary"),
+            unscrambleWord = document.getElementById("unscrambleWord"),
+            unscrambleType = document.getElementById("unscrambleType"),
+            showDef = document.getElementById("showDef"),
+            must = document.getElementById("must"),
+            pages = document.getElementsByClassName("page"),
+            formOptions = document.getElementsByClassName("formOption");
+        
+        var list = document.getElementById("search"),
+            mode = 1,
+            dic = dic1,
+            exact = 2,
+            unscramble = 1,
+            showDefinition = 1;
+
+        function hidePages(){
+            for(var i = 0; i < pages.length; i++){
+                pages[i].style.display = "none";
+            }
+        }
+        function hidePage(i){
+            pages[i].style.display = "none";
+        }
+        function showPage(i){
+            pages[i].style.display = "block";
+        }
+        function emptyWords(){
+            list.innerHTML = "";
+        }
+        function setWords(words){
+            emptyWords();
+            for(var i = 0; i < words.length; i++){
+                var element = document.createElement("option");
+                element.innerHTML = words[i];
+                list.appendChild(element);
+            }
+        }
+        function returnObj(obj){
+            var newObj = {},
+                keys = Object.keys(obj);
+            for(var i = 0; i < keys.length; i++){
+                newObj[keys[i]] = obj[keys[i]];
+            }
+            return newObj;
+        }
+        function addArrays(array1, array2){
+            var result = [];
+            for(var i = 0; i < array1.length; i++){
+                result.push(array1[i]);
+            }
+            for(var i = 0; i < array2.length; i++){
+                result.push(array2[i]);
+            }
+            return result;
+        }
+        function rearange(array){
+            var Max = -Infinity,
+                maxResult = [],
+                minResult = [],
+                done = true;
+            for(var i = 0; i < array.length; i++){
+                if(array[i].length >= Max){
+                    maxResult.push(array[i]);
+                    Max = array[i].length;
+                }else{
+                    minResult.push(array[i]);
+                    done = false;
+                }
+            }
+            if(done){
+                return addArrays(minResult, maxResult);
+            }
+            return rearange(addArrays(minResult, maxResult));
+        }
+
+        hidePages();
+        showPage(0);
+
+        unscrambleWord.addEventListener("mouseout", function(){
+            
+            if(unscrambleWord.value === "1"){
+                formOptions[2].style.display = "block";
+                formOptions[3].style.display = "block";
+            }else{
+                formOptions[2].style.display = "none";
+                formOptions[3].style.display = "none";
+            }
+
+        });
+        applyButton.addEventListener("click", function(){
+
+            event.preventDefault();
+
+            if(dictionary.value === "1"){
+                mode = 1;
+                dic = dic1;
+            }else{
+                mode = 2;
+                dic = dic2;
+            }
+
+            if(unscrambleType.checked){
+                exact = 1;
+            }else{
+                exact = 2;
+            }
+
+            if(showDef.checked){
+                showDefinition = 1;
+            }else{
+                showDefinition = 2;
+            }
+
+            if(unscrambleWord.value === "1"){
+                unscramble = 1;
+                emptyWords();
+            }else{
+                unscramble = 2;
+                setWords(mode===1?words1:words2);
+            }
+
+            hidePages();
+            showPage(0);
+
+        });
+        changeButton.addEventListener("click", function(){
+
+            event.preventDefault();
+
+            hidePages();
+            showPage(1);
+
+        });
+        searchButton.addEventListener("click", function(){
+
+            event.preventDefault();
+            
+            const word = document.getElementById("word").value,
+                result = document.getElementById("result"),
+                letters = "abcdefghijklmnopqrstuvwxyz".split(""),
+                words = mode === 1?words1:words2;
+
+            if(unscramble === 1){
+
+                //add up letter scores
+                var scores = {}, finalWords = [];
+                for(var i = 0; i < letters.length; i++){
+                    scores[letters[i]] = 0;
+                }
+                for(var i = 0; i < word.length; i++){
+                    scores[word[i]]++;
+                }
+                
+                //find words that match
+                for(var i = 0; i < words.length; i++){
+                    var testScores = returnObj(scores),
+                        match = true;
+                    for(var j = 0; j < words[i].length; j++){
+                        if(testScores[words[i][j]]){
+                            testScores[words[i][j]]--;
+                        }else{
+                            match = false;
+                        }
+                    }
+                    if(exact===1){
+                        for(var j = 0; j < Object.keys(testScores).length; j++){
+                            if(testScores[Object.keys(testScores)[j]]){
+                                match = false;
+                            }
+                        }
+                    }
+                    if(match){
+                        finalWords.push(words[i]);
+                    }
+                }
+
+                finalWords = rearange(finalWords);
+
+                //display the words and definitions
+                var final = "", results = 0;
+                for(var i = finalWords.length-1; i >= 0; i--){
+                    if(must.value==="" || (finalWords[i].split(must.value)).length > 1){
+                        results++;
+                        final += (showDefinition === 1?"<div class='word'><b>":"<b>")+finalWords[i]+(showDefinition === 1?":</b>":" </b>");
+                        if(showDefinition === 1){
+                            if(mode === 1){
+                                for(var j = 0; j < dic[finalWords[i]].length; j++){
+                                    final += "<p>"+dic[finalWords[i]][j]+"</p>";
+                                }
+                            }else{
+                                final += "<p>"+dic[finalWords[i]]+"</p>";
+                            }
+                        }
+                        if(showDefinition === 1){
+                            final += "</div>";
+                        }
+                    }
+                }
+                final = "<br>"+results+(results===1?" result<br><br>":" results<br><br>")+final;
+                result.innerHTML=final;
+
+            }else{
+
+                //display the word and definition
+                var final = "<br>";
+                if(!dic[word]){
+                    word = "stupid";
+                }
+                final += "<div class='word'><b>"+word+":</b>";
+                if(mode === 1){
+                    for(var j = 0; j < dic[word].length; j++){
+                        final+="<p>"+dic[word][j]+"</p>";
+                    }
+                }else{
+                    final+="<p>"+dic[word]+"</p>";
+                }
+                final+="</div>";
+                result.innerHTML=final;
+
+            }
+
+        });
+
+        </script>
+        
+    </body>
+</html>
